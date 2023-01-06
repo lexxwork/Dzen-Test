@@ -5,6 +5,7 @@ import authConfig from './config/auth.config';
 import databaseConfig from './config/database.config';
 
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -12,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
       load: [appConfig, authConfig, databaseConfig],
       envFilePath: ['.env'],
     }),
+    AuthModule,
     PrismaModule,
   ],
   controllers: [],
