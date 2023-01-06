@@ -6,6 +6,7 @@ import databaseConfig from './config/database.config';
 
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from 'user/user.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -15,6 +16,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     AuthModule,
     PrismaModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],
