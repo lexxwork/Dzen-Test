@@ -19,6 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException();
     }
     const userSelect: Prisma.UserSelect = {
+      id: true,
       email: true,
       userName: true,
     };
