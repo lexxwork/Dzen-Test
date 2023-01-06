@@ -6,3 +6,44 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  hash     String
+  userName String
+  posts    Message[]
+
+  @@map("users")
+}
+
+model Message {
+  id           Int         @id @default(autoincrement())
+  homePage     String?
+  text         String
+  createdAt    DateTime    @default(now())
+  author       User        @relation(fields: [authorId], references: [id])
+  authorId     Int
+  headerPostId Int?
+  headerPost   Message?    @relation("PostReplies", fields: [headerPostId], references: [id])
+  replyPosts   Message[]   @relation("PostReplies")
+  attachmentId Int?        @unique
+  attachment   Attachment? @relation(fields: [attachmentId], references: [id])
+
+  @@map("messages")
+}
+
+model Attachment {
+  id               Int            @id @default(autoincrement())
+  fileName         String
+  originalFileName String
+  type             AttachmentType
+  Message          Message?
+
+  @@map("attachments")
+}
+
+enum AttachmentType {
+  IMAGE
+  TEXT
+}
