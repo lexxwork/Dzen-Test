@@ -9,36 +9,57 @@ datasource db {
 
 model User {
   id       Int       @id @default(autoincrement())
-  email    String    @unique
-  hash     String
-  userName String
-  posts    Message[]
+  email    String    @unique @db.VarChar(100)
+  hash     String    @db.Char(68) //hash length 68 chars
+  userName String    @db.VarChar(100)
+  comments Comment[]
+  posts    Post[]
 
+  @@index([id, userName])
+  @@index([id, email])
   @@map("users")
 }
 
-model Message {
+model Post {
   id           Int         @id @default(autoincrement())
-  homePage     String?
-  text         String
+  homePage     String?     @db.VarChar(400)
+  text         String      @db.VarChar(5000)
   createdAt    DateTime    @default(now())
-  author       User        @relation(fields: [authorId], references: [id])
   authorId     Int
-  headerPostId Int?
-  headerPost   Message?    @relation("PostReplies", fields: [headerPostId], references: [id])
-  replyPosts   Message[]   @relation("PostReplies")
+  author       User        @relation(fields: [authorId], references: [id])
+  comments     Comment[]
   attachmentId Int?        @unique
   attachment   Attachment? @relation(fields: [attachmentId], references: [id])
 
-  @@map("messages")
+  @@index([id, createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id           Int         @id @default(autoincrement())
+  homePage     String?     @db.VarChar(400)
+  text         String      @db.VarChar(5000)
+  createdAt    DateTime    @default(now())
+  authorId     Int
+  author       User        @relation(fields: [authorId], references: [id])
+  postId       Int
+  post         Post        @relation(fields: [postId], references: [id])
+  replyToId    Int
+  replyTo      Comment     @relation("Replies", fields: [replyToId], references: [id])
+  replies      Comment[]   @relation("Replies")
+  attachmentId Int?        @unique
+  attachment   Attachment? @relation(fields: [attachmentId], references: [id])
+
+  @@map("comments")
 }
 
 model Attachment {
   id               Int            @id @default(autoincrement())
-  fileName         String
-  originalFileName String
+  fileUUID         String         @db.Char(32)
+  originalFileName String         @db.VarChar(300)
   type             AttachmentType
-  Message          Message?
+  post             Post?
+  comment          Comment?
 
   @@map("attachments")
 }

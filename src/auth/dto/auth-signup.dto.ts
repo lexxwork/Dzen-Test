@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -11,6 +12,7 @@ export class AuthSignUpDto {
   @IsNotEmpty()
   @IsEmail()
   @Transform(({ value }) => value.toLowerCase().trim())
+  @MaxLength(100)
   email: string;
 
   @IsString()
@@ -21,6 +23,7 @@ export class AuthSignUpDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(5)
+  @MaxLength(100)
   @IsAlphanumeric()
   userName: string;
 }
