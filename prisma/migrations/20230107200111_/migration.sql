@@ -2,7 +2,7 @@
 CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(100) NOT NULL,
-    `hash` CHAR(68) NOT NULL,
+    `hash` VARCHAR(120) NOT NULL,
     `userName` VARCHAR(100) NOT NULL,
 
     UNIQUE INDEX `users_email_key`(`email`),
@@ -33,7 +33,7 @@ CREATE TABLE `comments` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `authorId` INTEGER NOT NULL,
     `postId` INTEGER NOT NULL,
-    `replyToId` INTEGER NOT NULL,
+    `replyToId` INTEGER NULL,
     `attachmentId` INTEGER NULL,
 
     UNIQUE INDEX `comments_attachmentId_key`(`attachmentId`),
@@ -43,27 +43,30 @@ CREATE TABLE `comments` (
 -- CreateTable
 CREATE TABLE `attachments` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `fileUUID` CHAR(32) NOT NULL,
+    `fileUUID` CHAR(36) NOT NULL,
     `originalFileName` VARCHAR(300) NOT NULL,
     `type` ENUM('IMAGE', 'TEXT') NOT NULL,
+    `userId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `posts` ADD CONSTRAINT `posts_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `posts` ADD CONSTRAINT `posts_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `posts` ADD CONSTRAINT `posts_attachmentId_fkey` FOREIGN KEY (`attachmentId`) REFERENCES `attachments`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `comments` ADD CONSTRAINT `comments_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `comments` ADD CONSTRAINT `comments_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `comments` ADD CONSTRAINT `comments_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `comments` ADD CONSTRAINT `comments_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `posts`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `comments` ADD CONSTRAINT `comments_replyToId_fkey` FOREIGN KEY (`replyToId`) REFERENCES `comments`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `comments` ADD CONSTRAINT `comments_replyToId_fkey` FOREIGN KEY (`replyToId`) REFERENCES `comments`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `comments` ADD CONSTRAINT `comments_attachmentId_fkey` FOREIGN KEY (`attachmentId`) REFERENCES `attachments`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE `attachments` ADD CONSTRAINT `attachments_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

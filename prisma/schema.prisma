@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique @db.VarChar(100)
-  hash     String    @db.Char(68) //hash length 68 chars
-  userName String    @db.VarChar(100)
-  comments Comment[]
-  posts    Post[]
+  id          Int          @id @default(autoincrement())
+  email       String       @unique @db.VarChar(100)
+  hash        String       @db.VarChar(120)
+  userName    String       @db.VarChar(100)
+  comments    Comment[]
+  posts       Post[]
+  attachments Attachment[]
 
   @@index([id, userName])
   @@index([id, email])
@@ -26,7 +27,7 @@ model Post {
   text         String      @db.VarChar(5000)
   createdAt    DateTime    @default(now())
   authorId     Int
-  author       User        @relation(fields: [authorId], references: [id])
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   attachmentId Int?        @unique
   attachment   Attachment? @relation(fields: [attachmentId], references: [id])
@@ -41,11 +42,11 @@ model Comment {
   text         String      @db.VarChar(5000)
   createdAt    DateTime    @default(now())
   authorId     Int
-  author       User        @relation(fields: [authorId], references: [id])
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   postId       Int
-  post         Post        @relation(fields: [postId], references: [id])
-  replyToId    Int
-  replyTo      Comment     @relation("Replies", fields: [replyToId], references: [id])
+  post         Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  replyToId    Int?
+  replyTo      Comment?    @relation("Replies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies      Comment[]   @relation("Replies")
   attachmentId Int?        @unique
   attachment   Attachment? @relation(fields: [attachmentId], references: [id])
@@ -55,11 +56,13 @@ model Comment {
 
 model Attachment {
   id               Int            @id @default(autoincrement())
-  fileUUID         String         @db.Char(32)
+  fileUUID         String         @db.Char(36)
   originalFileName String         @db.VarChar(300)
   type             AttachmentType
   post             Post?
   comment          Comment?
+  user             User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId           Int?
 
   @@map("attachments")
 }
