@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import appConfig from './config/app.config';
-import authConfig from './config/auth.config';
-import databaseConfig from './config/database.config';
+import appConfig from 'config/app.config';
+import authConfig from 'config/auth.config';
+import databaseConfig from 'config/database.config';
 
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from 'prisma/prisma.module';
+import { AuthModule } from 'auth/auth.module';
 import { UserModule } from 'user/user.module';
+import { PostModule } from 'post/post.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,6 +18,7 @@ import { UserModule } from 'user/user.module';
     AuthModule,
     PrismaModule,
     UserModule,
+    PostModule,
   ],
   controllers: [],
   providers: [],
