@@ -8,6 +8,7 @@ import { PrismaModule } from 'prisma/prisma.module';
 import { AuthModule } from 'auth/auth.module';
 import { UserModule } from 'user/user.module';
 import { PostModule } from 'post/post.module';
+import { PaginationModule } from './pagination/pagination.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,6 +20,7 @@ import { PostModule } from 'post/post.module';
     PrismaModule,
     UserModule,
     PostModule,
+    PaginationModule,
   ],
   controllers: [],
   providers: [],
