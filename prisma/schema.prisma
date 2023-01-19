@@ -16,8 +16,9 @@ model User {
   posts       Post[]
   attachments Attachment[]
 
-  @@index([id, userName])
-  @@index([id, email])
+  @@index(id)
+  @@index(userName(length:10, sort: Asc))
+  @@index(email(length:10, sort: Asc))
   @@map("users")
 }
 
@@ -32,7 +33,8 @@ model Post {
   attachmentId Int?        @unique
   attachment   Attachment? @relation(fields: [attachmentId], references: [id])
 
-  @@index([id, createdAt])
+  @@index(id(sort: Desc))
+  @@index(createdAt(sort: Desc))
   @@map("posts")
 }
 
