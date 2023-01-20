@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { ModelFindManyArgs, NextKey, Pagination } from './pagination.service';
+import { PaginationService } from './pagination.service';
+import { ModelFindManyArgs, NextKey } from './interfaces/pagination.interface';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'prisma/prisma.module';
@@ -11,13 +12,14 @@ import { SeedAllService } from 'seeds/seedAll.service';
 import { Prisma } from '@prisma/client';
 import { isEqual, orderBy as _orderBy } from 'lodash';
 
-const paginatePosts = async (pagination: Pagination, options: { orderBy: any }) => {
+const paginatePosts = async (
+  pagination: PaginationService,
+  options: { orderBy: any },
+) => {
   const { orderBy } = options;
   const findManyArgs: ModelFindManyArgs<Prisma.PostFindManyArgs> = {
     where: undefined,
     take: 5,
-    // orderBy: { author: { userName: orderBy } },
-    // orderBy: [{ author: { userName: orderBy } }, { author: { email: orderBy } }],
     orderBy,
     select: {
       id: true,
@@ -59,7 +61,7 @@ const paginatePosts = async (pagination: Pagination, options: { orderBy: any }) 
 
 describe('paginationQuery tests', () => {
   let prisma: PrismaService;
-  let pagination: Pagination;
+  let pagination: PaginationService;
 
   beforeAll(async () => {
     const testingModule = await Test.createTestingModule({
@@ -73,10 +75,10 @@ describe('paginationQuery tests', () => {
         PostModule,
         SeedModule,
       ],
-      providers: [Logger, Pagination, SeedAllService],
+      providers: [Logger, PaginationService, SeedAllService],
     }).compile();
 
-    pagination = testingModule.get<Pagination>(Pagination);
+    pagination = testingModule.get<PaginationService>(PaginationService);
     prisma = testingModule.get<PrismaService>(PrismaService);
     const seedAllService = testingModule.get<SeedAllService>(SeedAllService);
 
