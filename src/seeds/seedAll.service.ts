@@ -94,7 +94,7 @@ export class SeedAllService {
     const posts = await Promise.all(
       [...Array(10).keys()].map((i) =>
         this.prisma.post.create(
-          messageGenerator('This is a sample post N' + i + 1, users[i].id, i),
+          messageGenerator('This is a sample post N' + (i + 1), users[i].id, i),
         ),
       ),
     );
@@ -102,7 +102,7 @@ export class SeedAllService {
     const comments = await Promise.all(
       [...Array(10).keys()].map((i) => {
         const message = messageGenerator(
-          'This is a sample comment N' + i + 1,
+          'This is a sample comment N' + (i + 1),
           users[i].id,
           i,
         );
@@ -112,16 +112,30 @@ export class SeedAllService {
       }),
     );
 
-    await Promise.all(
+    const replies = await Promise.all(
       [...Array(10).keys()].map((i) => {
         const message = messageGenerator(
-          'This is a sample reply N' + i + 1,
+          'This is a sample reply N' + (i + 1),
           users[i].id,
           i,
         );
         message.data['post'] = { connect: { id: posts[i].id } };
         message.include['post'] = true;
         message.data['replyTo'] = { connect: { id: comments[i].id } };
+        message.include['replyTo'] = true;
+        return this.prisma.comment.create(message);
+      }),
+    );
+    await Promise.all(
+      [...Array(10).keys()].map((i) => {
+        const message = messageGenerator(
+          'This is a sample answer to reply N' + (i + 1),
+          users[i].id,
+          i,
+        );
+        message.data['post'] = { connect: { id: posts[i].id } };
+        message.include['post'] = true;
+        message.data['replyTo'] = { connect: { id: replies[i].id } };
         message.include['replyTo'] = true;
         return this.prisma.comment.create(message);
       }),

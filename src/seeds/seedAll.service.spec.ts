@@ -40,11 +40,11 @@ describe('seedAll tests', () => {
 
   it('should be 20 comments', async () => {
     const count = await prisma.comment.count();
-    expect(count).toBe(20);
+    expect(count).toBe(30);
   });
 
   it('should be 30 attachments', async () => {
     const count = await prisma.attachment.count();
-    expect(count).toBe(30);
+    expect(count).toBe(40);
   });
 });
