@@ -7,10 +7,12 @@ export type ModelFindManyArgs<T> = {
   take: number;
 };
 
-export interface NextKey {
+export interface CursorKey {
   id: string | number;
   orderByItems?: [{ [key: string]: object | Date | number | string | boolean }];
 }
+
+export type CursorKeys = { prevCursor: CursorKey | null; nextCursor: CursorKey | null };
 
 export type OrderBy = {
   [key: string]: object | 'asc' | 'desc';

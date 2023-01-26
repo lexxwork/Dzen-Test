@@ -7,12 +7,18 @@ import {
   extractValueByPath,
   extractObjectByPath,
 } from 'utils/objects';
-import { OrderBy, NextKey, ModelFindManyArgs } from './interfaces/pagination.interface';
+import {
+  OrderBy,
+  CursorKey,
+  ModelFindManyArgs,
+  CursorKeys,
+} from './interfaces/pagination.interface';
 
 const ORDERBYMAP = { asc: 'gt', desc: 'lt' };
+const ORDERRVERSE = { gt: 'lt', lt: 'gt' };
 
 const orderByExtend = (
-  orderByArr: OrderBy[] | NextKey['orderByItems'],
+  orderByArr: OrderBy[] | CursorKey['orderByItems'],
 ): {
   [pathHash: string]: {
     item: any;
@@ -23,13 +29,15 @@ const orderByExtend = (
   return Object.fromEntries(
     orderByArr.map((item) => {
       const path = createPathsFromObject(item)[0];
-      const pathHash = path.map((item) => item.replace(/\./g, '\\.')).join('.');
+      const pathHash = Array.isArray(path)
+        ? path.map((item) => item.replace(/\./g, '\\.')).join('.')
+        : path;
       return [pathHash, { item, path }];
     }),
   );
 };
 
-const orderByToQuery = (orderByArr: OrderBy[], nextKey: NextKey) => {
+const orderByToQuery = (orderByArr: OrderBy[], nextKey: CursorKey, reverse = false) => {
   const whereUnique: any[] = [];
   const whereDuplicates: any[] = [];
   const { id, orderByItems } = nextKey;
@@ -47,7 +55,8 @@ const orderByToQuery = (orderByArr: OrderBy[], nextKey: NextKey) => {
     const itemQuery = orderByItemsInfo[pathHash].item;
     const orderType = extractValueByPath(orderBy, orderByPath);
     const itemValue = extractValueByPath(itemQuery, orderByPath);
-    const orderByKey = ORDERBYMAP[orderType];
+    let orderByKey = ORDERBYMAP[orderType];
+    orderByKey = !reverse ? orderByKey : ORDERRVERSE[orderByKey];
     const orderByValueQuery = set(cloneDeep(itemQuery), orderByPath, {
       [orderByKey]: itemValue,
     });
@@ -61,35 +70,46 @@ const orderByToQuery = (orderByArr: OrderBy[], nextKey: NextKey) => {
   ];
 };
 
-const nextKeyFn = (
-  lastItem: any | undefined,
+const cursorKeyFn = (
+  items: any[] | undefined,
   orderBy: OrderBy | OrderBy[],
-): NextKey | null => {
-  if (!lastItem) {
-    return null;
+): CursorKeys => {
+  if (!items || !items.length) {
+    return { nextCursor: null, prevCursor: null };
   }
-  const nextKey: NextKey = { id: lastItem.id };
+  const firstItem = items[0];
+  const lastItem = items[items.length - 1];
+
+  const prevCursor: CursorKey = { id: firstItem.id };
+  const nextCursor: CursorKey = { id: lastItem.id };
   let orderByArr = orderBy ? cloneDeep(orderBy) : [];
   orderByArr = (Array.isArray(orderByArr) ? orderByArr : [orderByArr]) as OrderBy[];
-  if (!lastItem || !orderByArr.length) {
-    return nextKey;
+  if (!orderByArr.length) {
+    return { nextCursor, prevCursor };
   }
-  const orderByKeys: any[] = [];
+  const orderByValPrev: any[] = [];
+  const orderByValNext: any[] = [];
   for (const orderBy of orderByArr) {
     const path = createPathsFromObject(orderBy)[0];
     if (path.includes('id')) {
       continue;
     }
-    const whereItem = extractObjectByPath(lastItem, path);
-    if (whereItem) {
-      orderByKeys.push(whereItem);
-      break;
+    const oPrev = extractObjectByPath(firstItem, path);
+    if (oPrev && !orderByValPrev.length) {
+      orderByValPrev.push(oPrev);
+    }
+    const oNext = extractObjectByPath(lastItem, path);
+    if (oNext && !orderByValNext.length) {
+      orderByValNext.push(oNext);
     }
   }
-  if (orderByKeys.length > 0) {
-    nextKey.orderByItems = orderByKeys as NextKey['orderByItems'];
+  if (orderByValPrev.length > 0) {
+    prevCursor.orderByItems = orderByValPrev as CursorKey['orderByItems'];
   }
-  return nextKey;
+  if (orderByValNext.length > 0) {
+    nextCursor.orderByItems = orderByValNext as CursorKey['orderByItems'];
+  }
+  return { prevCursor, nextCursor };
 };
 
 @Injectable()
@@ -99,13 +119,15 @@ export class PaginationService {
   async findManyPaginate<T>(
     modelName: Prisma.ModelName,
     findManyArgs: ModelFindManyArgs<T> = { take: 25 },
-    nextKey: NextKey = undefined,
+    cursorkeys: CursorKeys = { prevCursor: null, nextCursor: null },
   ): Promise<{
     items: Array<any>;
-    nextKey: NextKey;
+    cursorKeys: CursorKeys;
   }> {
     const { where, include, take, select, orderBy } = findManyArgs;
+    const { prevCursor, nextCursor } = cursorkeys;
     let paginatedWhere = undefined;
+    const reverse = take < 0;
     let orderByArr = orderBy ? cloneDeep(orderBy) : [];
     orderByArr = (Array.isArray(orderByArr) ? orderByArr : [orderByArr]) as OrderBy[];
 
@@ -116,19 +138,25 @@ export class PaginationService {
     const idIndex = orderByArr.findIndex((item) => 'id' in item);
     const orderByHasId = idIndex >= 0;
 
-    if (nextKey) {
+    const cursorKey = !reverse ? nextCursor : prevCursor;
+    if (cursorKey) {
       paginatedWhere = paginatedWhere ? paginatedWhere : {};
       if (orderByArr.length === 1 && orderByHasId) {
-        const orderBy = ORDERBYMAP[orderByArr[0].id];
-        paginatedWhere.id = { [orderBy]: nextKey.id };
+        let orderBy = ORDERBYMAP[orderByArr[0].id];
+        orderBy = !reverse ? orderBy : ORDERRVERSE[orderBy];
+        paginatedWhere.id = { [orderBy]: cursorKey.id };
       } else if (
         !orderByArr.length ||
-        !nextKey.orderByItems ||
-        !nextKey.orderByItems.length
+        !cursorKey.orderByItems ||
+        !cursorKey.orderByItems.length
       ) {
-        paginatedWhere.id = { gt: nextKey.id };
+        paginatedWhere.id = { gt: cursorKey.id };
       } else {
-        const paginationQuery = orderByToQuery(orderByArr as OrderBy[], nextKey);
+        const paginationQuery = orderByToQuery(
+          orderByArr as OrderBy[],
+          cursorKey,
+          reverse,
+        );
         if (paginatedWhere.OR == null) {
           paginatedWhere.OR = paginationQuery;
         } else {
@@ -171,19 +199,22 @@ export class PaginationService {
 
     let items = await this.prisma[modelName].findMany(prismaQuery);
     if (!items || !items.length) {
-      return { items: null, nextKey: null };
+      const cursorKeys = {
+        nextCursor: reverse ? prevCursor : null,
+        prevCursor: reverse ? null : nextCursor,
+      };
+      return { items: null, cursorKeys };
     }
-    const lastItem = items[items.length - 1];
-    const newNextKey = await nextKeyFn(lastItem, orderBy as OrderBy[]);
+    const cursorKeys = cursorKeyFn(items, orderBy as OrderBy[]);
     items =
       postSortingArgs && postSortingArgs.length
         ? _orderBy(items, ...postSortingArgs)
         : items;
 
     console.log(
-      JSON.stringify({ prismaQuery, postSortingArgs, items, newNextKey }, null, 2),
-    );
+      // JSON.stringify({ prismaQuery, postSortingArgs, items, cursorKeys }, null, 2),
+    // );
 
-    return { items, nextKey: newNextKey };
+    return { items, cursorKeys };
   }
 }
