@@ -1,10 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { PaginationService } from './pagination.service';
-import {
-  ModelFindManyArgs,
-  CursorKey,
-  CursorKeys,
-} from './interfaces/pagination.interface';
+import { ModelFindManyArgs, CursorKeys } from './interfaces/pagination.interface';
 // import { PrismaService } from 'prisma/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'prisma/prisma.module';

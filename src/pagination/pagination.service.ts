@@ -211,8 +211,8 @@ export class PaginationService {
         ? _orderBy(items, ...postSortingArgs)
         : items;
 
-    console.log(
-      // JSON.stringify({ prismaQuery, postSortingArgs, items, cursorKeys }, null, 2),
+    // console.log(
+    // JSON.stringify({ prismaQuery, postSortingArgs, items, cursorKeys }, null, 2),
     // );
 
     return { items, cursorKeys };
