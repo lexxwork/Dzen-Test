@@ -137,11 +137,13 @@ describe('paginationQuery tests', () => {
   });
 
   it('sorting should paginate reversed by id', async () => {
+    const prevCursorMap = { desc: { id: 0 }, asc: { id: 11 } };
     await Promise.all(
       ['asc', 'desc'].map(async (sortType) => {
         const { pages } = await paginatePosts(pagination, {
           orderBy: [{ id: sortType }],
           reverse: true,
+          cursorKeys: { nextCursor: null, prevCursor: prevCursorMap[sortType] },
         });
         pages.forEach((page) => {
           const sorted = _orderBy(page, ['id'], [sortType]);

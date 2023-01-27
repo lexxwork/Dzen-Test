@@ -70,7 +70,7 @@ const orderByToQuery = (orderByArr: OrderBy[], nextKey: CursorKey, reverse = fal
   ];
 };
 
-const cursorKeyFn = (
+export const cursorKeyFn = (
   items: any[] | undefined,
   orderBy: OrderBy | OrderBy[],
 ): CursorKeys => {
