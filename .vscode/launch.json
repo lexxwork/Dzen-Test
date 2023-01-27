@@ -1,11 +1,22 @@
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"name": "Next.js: debug server-side",
-			"type": "node-terminal",
-			"request": "launch",
-			"command": "npm run dev"
-		}
-	]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Jest Current File",
+      "type": "node",
+      "request": "launch",
+      "envFile": "${workspaceFolder}/.env.test",
+      "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+      "args": ["${file}", "--runInBand"],
+      "cwd": "${workspaceRoot}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+      ]
+    }
+  ]
 }
